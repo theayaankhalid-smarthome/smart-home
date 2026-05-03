@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Home App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #060b18;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 20px 0;
+    }
+
+    .app {
+      font-family: 'Outfit', sans-serif;
+      background: #080d1a;
+      min-height: 780px;
+      width: 390px;
+      color: #e2e8f5;
+      overflow: hidden;
+      position: relative;
+      border-radius: 36px;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      transition: transform 0.35s cubic-bezier(.4,0,.2,1), opacity 0.3s;
+      opacity: 0;
+      pointer-events: none;
+      overflow-y: auto;
+      padding-bottom: 76px;
+    }
+    .screen.active {
+      opacity: 1;
+      pointer-events: all;
+      position: relative;
+    }
+
+    /* Background blobs */
+    .bg-blob { position: absolute; border-radius: 50%; pointer-events: none; z-index: 0; }
+    .b1 { width: 260px; height: 260px; background: #0f2040; top: -80px; right: -80px; }
+    .b2 { width: 180px; height: 180px; background: #091830; top: 120px; left: -60px; }
+
+    .rel { position: relative; z-index: 1; }
+
+    /* Top bar */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 20px 0;
+    }
+    .app-label {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: #4a7aa8;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .icon-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.05);
+      border: .5px solid rgba(255,255,255,.1);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .icon-btn:hover { background: rgba(255,255,255,.09); }
+    .notif-wrap { position: relative; }
+    .notif-pip {
+      width: 7px; height: 7px;
+      background: #38bdf8;
+      border-radius: 50%;
+      position: absolute;
+      top: 5px; right: 5px;
+      border: 1.5px solid #080d1a;
+    }
+
+    /* Profile section */
+    .profile-section {
+      margin: 18px 16px 0;
+      background: #0f1e35;
+      border: .5px solid rgba(80,140,200,.18);
+      border-radius: 22px;
+      padding: 20px;
+    }
+    .profile-row { display: flex; align-items: center; gap: 14px; }
+    .avatar-ring {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: #0d2244;
+      border: 2px solid rgba(56,189,248,.3);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .av-initials {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 22px; font-weight: 600;
+      color: #7ac4e8;
+    }
+    .av-online {
+      width: 12px; height: 12px;
+      background: #4ade80;
+      border-radius: 50%;
+      position: absolute;
+      bottom: 2px; right: 2px;
+      border: 2px solid #080d1a;
+    }
+    .p-name { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 600; color: #ddeaf8; }
+    .p-id { font-size: 12px; color: #3d6a90; margin-top: 3px; }
+    .p-loc { font-size: 11px; color: #38bdf8; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+    .edit-btn {
+      margin-left: auto;
+      background: rgba(56,189,248,.08);
+      border: .5px solid rgba(56,189,248,.25);
+      color: #38bdf8;
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px; font-weight: 500;
+      padding: 7px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all .2s;
+      white-space: nowrap;
+    }
+    .edit-btn:hover { background: rgba(56,189,248,.16); }
+
+    /* Stats row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 8px;
+      margin: 14px 0 0;
+    }
+    .stat-pill {
+      background: rgba(255,255,255,.04);
+      border: .5px solid rgba(255,255,255,.07);
+      border-radius: 12px;
+      padding: 10px 8px;
+      text-align: center;
+    }
+    .stat-val { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; color: #ddeaf8; }
+    .stat-lbl { font-size: 10px; color: #3d6a90; margin-top: 2px; }
+
+    /* Section header */
+    .sec-head { display: flex; justify-content: space-between; align-items: center; padding: 22px 20px 10px; }
+    .sec-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13px; font-weight: 500;
+      color: #4a7aa8;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .all-link { font-size: 12px; color: #38bdf8; cursor: pointer; }
+
+    /* Device tiles */
+    .devices-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 11px;
+      padding: 0 16px;
+    }
+    .dev-tile {
+      background: #0e1c30;
+      border: .5px solid rgba(255,255,255,.07);
+      border-radius: 18px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all .25s;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      position: relative;
+      overflow: hidden;
+      min-height: 100px;
+    }
+    .dev-tile:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.13); }
+    .tile-accent { position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 18px 18px 0 0; }
+    .a-blue   { background: #1e5fa0; }
+    .a-amber  { background: #92600a; }
+    .a-yellow { background: #8a6d00; }
+    .a-green  { background: #2a6611; }
+    .a-red    { background: #8a2222; }
+
+    .tile-icon { font-size: 22px; margin-bottom: 10px; }
+    .tile-name { font-size: 12px; color: #3d6a90; margin-bottom: 3px; }
+    .tile-status { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 5px; }
+    .sdot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+    /* Bottom nav */
+    .bottom-nav {
+      position: sticky;
+      bottom: 0;
+      background: rgba(8,13,26,.94);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: .5px solid rgba(255,255,255,.07);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 10px 0 14px;
+      z-index: 50;
+    }
+    .nav-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      cursor: pointer;
+      padding: 4px 16px;
+      border-radius: 10px;
+      transition: all .2s;
+      border: none; background: none;
+    }
+    .nav-ico { font-size: 18px; color: #2e4f6a; }
+    .nav-lbl { font-size: 10px; font-weight: 500; color: #2e4f6a; letter-spacing: .02em; }
+    .nav-btn.active .nav-ico,
+    .nav-btn.active .nav-lbl { color: #38bdf8; }
+    .nav-center-btn {
+      background: #143566;
+      border: .5px solid rgba(56,189,248,.3);
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      margin-top: -12px;
+      transition: all .2s;
+      flex-shrink: 0;
+    }
+    .nav-center-btn:hover { background: #1a4080; }
+
+    /* Device list screen */
+    .dev-screen-top {
+      padding: 20px 20px 0;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .back-btn {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.05);
+      border: .5px solid rgba(255,255,255,.1);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .dev-screen-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 17px; font-weight: 600;
+      color: #ddeaf8;
+    }
+
+    /* Detail card */
+    .dev-detail-card {
+      margin: 16px 16px 0;
+      background: #0e1c30;
+      border: .5px solid rgba(255,255,255,.1);
+      border-radius: 22px;
+      padding: 20px;
+    }
+    .detail-icon-wrap {
+      width: 52px; height: 52px;
+      border-radius: 15px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      margin-bottom: 14px;
+    }
+    .di-blue   { background: rgba(56,189,248,.1); }
+    .di-amber  { background: rgba(251,146,60,.1); }
+    .di-yellow { background: rgba(234,179,8,.1); }
+    .di-green  { background: rgba(74,222,128,.1); }
+    .di-red    { background: rgba(248,113,113,.1); }
+
+    .detail-label { font-size: 12px; color: #3d6a90; margin-bottom: 4px; }
+    .detail-val {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 30px; font-weight: 600;
+      color: #ddeaf8; line-height: 1;
+    }
+    .detail-sub { font-size: 13px; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+
+    .progress-wrap { margin-top: 16px; }
+    .prog-label { display: flex; justify-content: space-between; font-size: 12px; color: #3d6a90; margin-bottom: 6px; }
+    .prog-bg { height: 6px; background: rgba(255,255,255,.07); border-radius: 6px; overflow: hidden; }
+    .prog-fill { height: 100%; border-radius: 6px; transition: width .8s ease; }
+    .pf-blue   { background: #1e6fa0; }
+    .pf-amber  { background: #b07010; }
+    .pf-green  { background: #2a7a11; }
+    .pf-yellow { background: #9a7800; }
+
+    .info-rows { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .info-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 12px;
+      background: rgba(255,255,255,.03);
+      border: .5px solid rgba(255,255,255,.06);
+      border-radius: 12px;
+    }
+    .ir-key { font-size: 12px; color: #3d6a90; }
+    .ir-val  { font-size: 13px; font-weight: 500; color: #b0cce0; }
+
+    .toggle-row-big {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 14px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,.03);
+      border: .5px solid rgba(255,255,255,.06);
+      border-radius: 14px;
+    }
+    .tg-label { font-size: 13px; font-weight: 500; color: #b0cce0; }
+    .tg {
+      width: 44px; height: 24px;
+      border-radius: 12px;
+      cursor: pointer;
+      position: relative;
+      transition: background .2s;
+      border: none; outline: none;
+      flex-shrink: 0;
+    }
+    .tg.on  { background: #4ade80; }
+    .tg.off { background: rgba(255,255,255,.15); }
+    .tg-knob {
+      position: absolute;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: white;
+      top: 3px;
+      transition: left .2s;
+    }
+    .tg.on  .tg-knob { left: 23px; }
+    .tg.off .tg-knob { left: 3px; }
+
+    /* Settings */
+    .settings-screen { padding: 16px; }
+    .settings-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px; font-weight: 600;
+      color: #ddeaf8;
+      padding: 8px 4px 16px;
+    }
+    .set-group { margin-bottom: 18px; }
+    .set-group-title {
+      font-size: 11px; font-weight: 500;
+      color: #3d6a90;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      padding: 0 4px;
+    }
+    .set-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px;
+      background: #0e1c30;
+      border: .5px solid rgba(255,255,255,.07);
+      border-radius: 14px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .set-item:hover { background: #111f35; }
+    .set-ico  { font-size: 18px; flex-shrink: 0; }
+    .set-text { flex: 1; }
+    .set-name { font-size: 13px; font-weight: 500; color: #c8dff5; }
+    .set-desc { font-size: 11px; color: #3d6a90; margin-top: 1px; }
+    .set-arrow { font-size: 14px; color: #2e4f6a; }
+  </style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- ══════════════════ HOME SCREEN ══════════════════ -->
+  <div class="screen active" id="screen-home">
+    <div class="bg-blob b1"></div>
+    <div class="bg-blob b2"></div>
+    <div class="rel">
+
+      <!-- Top bar -->
+      <div class="topbar">
+        <span class="app-label">Smart Home</span>
+        <div class="notif-wrap icon-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7ea8c4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          <div class="notif-pip"></div>
+        </div>
+      </div>
+
+      <!-- Profile card -->
+      <div class="profile-section">
+        <div class="profile-row">
+          <div class="avatar-ring">
+            <span class="av-initials">AK</span>
+            <div class="av-online"></div>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div class="p-name">Amir Khan</div>
+            <div class="p-id">#SH-20847</div>
+            <div class="p-loc">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              Srinagar, India
+            </div>
+          </div>
+          <button class="edit-btn" onclick="this.textContent='Saved ✓'; setTimeout(()=>this.textContent='Edit',1500)">Edit</button>
+        </div>
+        <div class="stats-row">
+          <div class="stat-pill"><div class="stat-val">5</div><div class="stat-lbl">Devices</div></div>
+          <div class="stat-pill"><div class="stat-val" style="color:#4ade80">4</div><div class="stat-lbl">Active</div></div>
+          <div class="stat-pill"><div class="stat-val" style="color:#fbbf24">1</div><div class="stat-lbl">Alert</div></div>
+        </div>
+      </div>
+
+      <!-- Device tiles -->
+      <div class="sec-head">
+        <span class="sec-title">My Devices</span>
+        <span class="all-link" onclick="goDevices()">See all →</span>
+      </div>
+
+      <div class="devices-grid">
+        <div class="dev-tile" onclick="openDevice('water')">
+          <div class="tile-accent a-blue"></div>
+          <div class="tile-icon">💧</div>
+          <div class="tile-name">Water Tank</div>
+          <div class="tile-status"><span class="sdot" style="background:#38bdf8"></span><span style="color:#38bdf8">72% Full</span></div>
+        </div>
+        <div class="dev-tile" onclick="openDevice('geyser')">
+          <div class="tile-accent a-amber"></div>
+          <div class="tile-icon">🔥</div>
+          <div class="tile-name">Geyser</div>
+          <div class="tile-status" id="home-geyser-status">
+            <span class="sdot" style="background:#fb923c"></span><span style="color:#fb923c">ON · 65°C</span>
+          </div>
+        </div>
+        <div class="dev-tile" onclick="openDevice('elec')">
+          <div class="tile-accent a-yellow"></div>
+          <div class="tile-icon">⚡</div>
+          <div class="tile-name">Electricity</div>
+          <div class="tile-status"><span class="sdot" style="background:#fbbf24"></span><span style="color:#fbbf24">4.2 kW</span></div>
+        </div>
+        <div class="dev-tile" onclick="openDevice('air')">
+          <div class="tile-accent a-green"></div>
+          <div class="tile-icon">🌿</div>
+          <div class="tile-name">Air Quality</div>
+          <div class="tile-status"><span class="sdot" style="background:#4ade80"></span><span style="color:#4ade80">Good · 42</span></div>
+        </div>
+        <div class="dev-tile" style="grid-column:1/-1;flex-direction:row;align-items:center;gap:12px;min-height:auto" onclick="openDevice('fire')">
+          <div class="tile-accent a-red"></div>
+          <div class="tile-icon" style="margin-bottom:0">🚨</div>
+          <div>
+            <div class="tile-name">Fire Alarm</div>
+            <div class="tile-status"><span class="sdot" style="background:#4ade80"></span><span style="color:#4ade80">Safe · No smoke</span></div>
+          </div>
+          <div style="margin-left:auto;font-size:11px;color:#2e4f6a">Tap for details →</div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /home screen -->
+
+  <!-- ══════════════════ DEVICES SCREEN ══════════════════ -->
+  <div class="screen" id="screen-devices">
+    <div class="dev-screen-top">
+      <div class="back-btn" onclick="goHome()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7ea8c4" stroke-width="2.5" stroke-linecap="round">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </div>
+      <span class="dev-screen-title">All Devices</span>
+    </div>
+    <div style="padding:12px 16px 0;display:flex;flex-direction:column;gap:10px">
+      <div class="dev-tile" style="flex-direction:row;align-items:center;gap:14px;min-height:auto;padding:14px 16px" onclick="openDevice('water')">
+        <div class="tile-accent a-blue"></div>
+        <div style="font-size:22px">💧</div>
+        <div style="flex:1"><div class="tile-name">Water Tank</div><div class="tile-status"><span class="sdot" style="background:#38bdf8"></span><span style="color:#38bdf8">72% Full</span></div></div>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2e4f6a" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="dev-tile" style="flex-direction:row;align-items:center;gap:14px;min-height:auto;padding:14px 16px" onclick="openDevice('geyser')">
+        <div class="tile-accent a-amber"></div>
+        <div style="font-size:22px">🔥</div>
+        <div style="flex:1"><div class="tile-name">Geyser</div><div class="tile-status" id="list-geyser-status"><span class="sdot" style="background:#fb923c"></span><span style="color:#fb923c">ON · 65°C</span></div></div>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2e4f6a" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="dev-tile" style="flex-direction:row;align-items:center;gap:14px;min-height:auto;padding:14px 16px" onclick="openDevice('elec')">
+        <div class="tile-accent a-yellow"></div>
+        <div style="font-size:22px">⚡</div>
+        <div style="flex:1"><div class="tile-name">Electricity</div><div class="tile-status"><span class="sdot" style="background:#fbbf24"></span><span style="color:#fbbf24">4.2 kW — High usage</span></div></div>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2e4f6a" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="dev-tile" style="flex-direction:row;align-items:center;gap:14px;min-height:auto;padding:14px 16px" onclick="openDevice('air')">
+        <div class="tile-accent a-green"></div>
+        <div style="font-size:22px">🌿</div>
+        <div style="flex:1"><div class="tile-name">Air Quality</div><div class="tile-status"><span class="sdot" style="background:#4ade80"></span><span style="color:#4ade80">Good · AQI 42</span></div></div>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2e4f6a" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="dev-tile" style="flex-direction:row;align-items:center;gap:14px;min-height:auto;padding:14px 16px" onclick="openDevice('fire')">
+        <div class="tile-accent a-red"></div>
+        <div style="font-size:22px">🚨</div>
+        <div style="flex:1"><div class="tile-name">Fire Alarm</div><div class="tile-status"><span class="sdot" style="background:#4ade80"></span><span style="color:#4ade80">Safe · No smoke</span></div></div>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2e4f6a" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+  </div><!-- /devices screen -->
+
+  <!-- ══════════════════ DETAIL SCREEN ══════════════════ -->
+  <div class="screen" id="screen-detail">
+    <div class="dev-screen-top">
+      <div class="back-btn" id="detail-back-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7ea8c4" stroke-width="2.5" stroke-linecap="round">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </div>
+      <span class="dev-screen-title" id="detail-title">Device</span>
+    </div>
+    <div id="detail-body" style="padding:0 16px"></div>
+  </div><!-- /detail screen -->
+
+  <!-- ══════════════════ SETTINGS SCREEN ══════════════════ -->
+  <div class="screen" id="screen-settings">
+    <div class="settings-screen">
+      <div class="settings-title">Settings</div>
+      <div class="set-group">
+        <div class="set-group-title">Account</div>
+        <div class="set-item"><span class="set-ico">👤</span><div class="set-text"><div class="set-name">Profile</div><div class="set-desc">Amir Khan · #SH-20847</div></div><span class="set-arrow">›</span></div>
+        <div class="set-item"><span class="set-ico">🔔</span><div class="set-text"><div class="set-name">Notifications</div><div class="set-desc">All alerts enabled</div></div><span class="set-arrow">›</span></div>
+      </div>
+      <div class="set-group">
+        <div class="set-group-title">Home</div>
+        <div class="set-item"><span class="set-ico">🏠</span><div class="set-text"><div class="set-name">Home name</div><div class="set-desc">Amir's Home</div></div><span class="set-arrow">›</span></div>
+        <div class="set-item"><span class="set-ico">📍</span><div class="set-text"><div class="set-name">Location</div><div class="set-desc">Srinagar, India</div></div><span class="set-arrow">›</span></div>
+        <div class="set-item"><span class="set-ico">🌙</span><div class="set-text"><div class="set-name">Night mode schedule</div><div class="set-desc">10:00 PM – 6:00 AM</div></div><span class="set-arrow">›</span></div>
+      </div>
+      <div class="set-group">
+        <div class="set-group-title">Security</div>
+        <div class="set-item"><span class="set-ico">🔒</span><div class="set-text"><div class="set-name">App lock</div><div class="set-desc">Biometric enabled</div></div><span class="set-arrow">›</span></div>
+        <div class="set-item"><span class="set-ico">📱</span><div class="set-text"><div class="set-name">Connected devices</div><div class="set-desc">5 devices paired</div></div><span class="set-arrow">›</span></div>
+      </div>
+    </div>
+  </div><!-- /settings screen -->
+
+  <!-- ══════════════════ BOTTOM NAV ══════════════════ -->
+  <div class="bottom-nav" id="bottom-nav">
+    <button class="nav-btn active" id="nav-home" onclick="goHome()">
+      <span class="nav-ico">🏠</span><span class="nav-lbl">Home</span>
+    </button>
+    <button class="nav-btn" id="nav-devices" onclick="goDevices()">
+      <span class="nav-ico">📡</span><span class="nav-lbl">Devices</span>
+    </button>
+    <div class="nav-center-btn" onclick="goHome()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7ac4e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    </div>
+    <button class="nav-btn" id="nav-stats" onclick="goDevices()">
+      <span class="nav-ico">📊</span><span class="nav-lbl">Stats</span>
+    </button>
+    <button class="nav-btn" id="nav-settings" onclick="goSettings()">
+      <span class="nav-ico">⚙️</span><span class="nav-lbl">Settings</span>
+    </button>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+  let geyserOn = true;
+  let prevScreen = 'home';
+
+  function showScreen(id, navId) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    if (navId) document.getElementById(navId).classList.add('active');
+  }
+
+  function goHome()     { showScreen('screen-home',     'nav-home');     prevScreen = 'home'; }
+  function goDevices()  { showScreen('screen-devices',  'nav-devices');  prevScreen = 'devices'; }
+  function goSettings() { showScreen('screen-settings', 'nav-settings'); }
+
+  function openDevice(type) {
+    const detail  = document.getElementById('detail-body');
+    const title   = document.getElementById('detail-title');
+    const backBtn = document.getElementById('detail-back-btn');
+    backBtn.onclick = prevScreen === 'devices' ? goDevices : goHome;
+
+    if (type === 'water') {
+      title.textContent = 'Water Tank';
+      detail.innerHTML = `
+        <div class="dev-detail-card">
+          <div class="detail-icon-wrap di-blue">💧</div>
+          <div class="detail-label">Current Level</div>
+          <div class="detail-val">72%</div>
+          <div class="detail-sub"><span class="sdot" style="background:#38bdf8"></span><span style="color:#38bdf8">Normal</span></div>
+          <div class="progress-wrap">
+            <div class="prog-label"><span>Empty</span><span>Full</span></div>
+            <div class="prog-bg"><div class="prog-fill pf-blue" style="width:72%"></div></div>
+          </div>
+          <div class="info-rows">
+            <div class="info-row"><span class="ir-key">Capacity</span><span class="ir-val">1000 L</span></div>
+            <div class="info-row"><span class="ir-key">Current volume</span><span class="ir-val">720 L</span></div>
+            <div class="info-row"><span class="ir-key">Motor status</span><span class="ir-val" style="color:#4ade80">Running</span></div>
+            <div class="info-row"><span class="ir-key">Last filled</span><span class="ir-val">2 hrs ago</span></div>
+            <div class="info-row"><span class="ir-key">Est. empty in</span><span class="ir-val">~14 hrs</span></div>
+          </div>
+        </div>`;
+
+    } else if (type === 'geyser') {
+      title.textContent = 'Geyser';
+      const onOff = geyserOn ? 'on' : 'off';
+      const txt   = geyserOn ? 'ON' : 'OFF';
+      const temp  = geyserOn ? '65°C' : '—';
+      detail.innerHTML = `
+        <div class="dev-detail-card">
+          <div class="detail-icon-wrap di-amber">🔥</div>
+          <div class="detail-label">Status</div>
+          <div class="detail-val" id="g-val">${txt}</div>
+          <div class="detail-sub"><span class="sdot" style="background:#fb923c"></span><span style="color:#fb923c" id="g-temp">${temp}</span></div>
+          <div class="toggle-row-big">
+            <span class="tg-label">Power</span>
+            <button class="tg ${onOff}" id="geyser-tg" onclick="toggleGeyser()"><div class="tg-knob"></div></button>
+          </div>
+          <div class="info-rows">
+            <div class="info-row"><span class="ir-key">Set temperature</span><span class="ir-val">65°C</span></div>
+            <div class="info-row"><span class="ir-key">Mode</span><span class="ir-val">Eco</span></div>
+            <div class="info-row"><span class="ir-key">Power draw</span><span class="ir-val">2.0 kW</span></div>
+            <div class="info-row"><span class="ir-key">Last used</span><span class="ir-val">Today, 7:30 AM</span></div>
+          </div>
+        </div>`;
+
+    } else if (type === 'elec') {
+      title.textContent = 'Electricity';
+      detail.innerHTML = `
+        <div class="dev-detail-card">
+          <div class="detail-icon-wrap di-yellow">⚡</div>
+          <div class="detail-label">Current Usage</div>
+          <div class="detail-val">4.2 kW</div>
+          <div class="detail-sub"><span class="sdot" style="background:#fbbf24"></span><span style="color:#fbbf24">High</span></div>
+          <div class="progress-wrap">
+            <div class="prog-label"><span>0 kW</span><span>6 kW max</span></div>
+            <div class="prog-bg"><div class="prog-fill pf-yellow" style="width:70%"></div></div>
+          </div>
+          <div class="info-rows">
+            <div class="info-row"><span class="ir-key">Today's usage</span><span class="ir-val">18.4 kWh</span></div>
+            <div class="info-row"><span class="ir-key">Monthly bill (est.)</span><span class="ir-val">₹1,240</span></div>
+            <div class="info-row"><span class="ir-key">Peak today</span><span class="ir-val">5.8 kW at 8AM</span></div>
+            <div class="info-row"><span class="ir-key">Main breaker</span><span class="ir-val" style="color:#4ade80">Normal</span></div>
+          </div>
+        </div>`;
+
+    } else if (type === 'air') {
+      title.textContent = 'Air Quality';
+      detail.innerHTML = `
+        <div class="dev-detail-card">
+          <div class="detail-icon-wrap di-green">🌿</div>
+          <div class="detail-label">AQI Index</div>
+          <div class="detail-val">42</div>
+          <div class="detail-sub"><span class="sdot" style="background:#4ade80"></span><span style="color:#4ade80">Good</span></div>
+          <div class="progress-wrap">
+            <div class="prog-label"><span>0 (Clean)</span><span>300 (Hazardous)</span></div>
+            <div class="prog-bg"><div class="prog-fill pf-green" style="width:14%"></div></div>
+          </div>
+          <div class="info-rows">
+            <div class="info-row"><span class="ir-key">PM2.5</span><span class="ir-val">12 µg/m³</span></div>
+            <div class="info-row"><span class="ir-key">CO₂</span><span class="ir-val">410 ppm</span></div>
+            <div class="info-row"><span class="ir-key">Humidity</span><span class="ir-val">58%</span></div>
+            <div class="info-row"><span class="ir-key">Temperature</span><span class="ir-val">22°C</span></div>
+            <div class="info-row"><span class="ir-key">Sensor</span><span class="ir-val" style="color:#4ade80">Active</span></div>
+          </div>
+        </div>`;
+
+    } else if (type === 'fire') {
+      title.textContent = 'Fire Alarm';
+      detail.innerHTML = `
+        <div class="dev-detail-card">
+          <div class="detail-icon-wrap di-red">🚨</div>
+          <div class="detail-label">Status</div>
+          <div class="detail-val" style="color:#4ade80">Safe</div>
+          <div class="detail-sub"><span class="sdot" style="background:#4ade80"></span><span style="color:#4ade80">No smoke or fire detected</span></div>
+          <div class="info-rows">
+            <div class="info-row"><span class="ir-key">Smoke sensor</span><span class="ir-val" style="color:#4ade80">Clear</span></div>
+            <div class="info-row"><span class="ir-key">Heat sensor</span><span class="ir-val" style="color:#4ade80">Normal · 28°C</span></div>
+            <div class="info-row"><span class="ir-key">CO detector</span><span class="ir-val" style="color:#4ade80">Clear</span></div>
+            <div class="info-row"><span class="ir-key">Last alarm</span><span class="ir-val">Never</span></div>
+            <div class="info-row"><span class="ir-key">Last check</span><span class="ir-val">2 min ago</span></div>
+            <div class="info-row"><span class="ir-key">Battery</span><span class="ir-val" style="color:#4ade80">100%</span></div>
+          </div>
+        </div>`;
+    }
+
+    showScreen('screen-detail', null);
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  }
+
+  function toggleGeyser() {
+    geyserOn = !geyserOn;
+    const tg = document.getElementById('geyser-tg');
+    const gv = document.getElementById('g-val');
+    const gt = document.getElementById('g-temp');
+    if (tg) tg.className = 'tg ' + (geyserOn ? 'on' : 'off');
+    if (gv) gv.textContent = geyserOn ? 'ON' : 'OFF';
+    if (gt) gt.textContent = geyserOn ? '65°C' : '—';
+
+    const html = geyserOn
+      ? '<span class="sdot" style="background:#fb923c"></span><span style="color:#fb923c">ON · 65°C</span>'
+      : '<span class="sdot" style="background:#3d6a90"></span><span style="color:#3d6a90">OFF</span>';
+
+    const homeS = document.getElementById('home-geyser-status');
+    const listS = document.getElementById('list-geyser-status');
+    if (homeS) homeS.innerHTML = html;
+    if (listS) listS.innerHTML = html;
+  }
+</script>
+</body>
+</html>
