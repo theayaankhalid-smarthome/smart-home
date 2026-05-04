@@ -8,6 +8,9 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    ::-webkit-scrollbar { display: none; }
+    * { scrollbar-width: none; -ms-overflow-style: none; }
+
     body {
       background: #060b18;
       display: flex;
@@ -36,6 +39,7 @@
       opacity: 0;
       pointer-events: none;
       overflow-y: auto;
+      overflow-x: hidden;
       padding-bottom: 76px;
     }
     .screen.active {
@@ -272,7 +276,6 @@
       margin-bottom: 14px;
     }
     .di-blue   { background: rgba(56,189,248,.1); }
-    .di-amber  { background: rgba(251,146,60,.1); }
     .di-yellow { background: rgba(234,179,8,.1); }
     .di-green  { background: rgba(74,222,128,.1); }
     .di-red    { background: rgba(248,113,113,.1); }
@@ -290,7 +293,6 @@
     .prog-bg { height: 6px; background: rgba(255,255,255,.07); border-radius: 6px; overflow: hidden; }
     .prog-fill { height: 100%; border-radius: 6px; transition: width .8s ease; }
     .pf-blue   { background: #1e6fa0; }
-    .pf-amber  { background: #b07010; }
     .pf-green  { background: #2a7a11; }
     .pf-yellow { background: #9a7800; }
 
@@ -304,37 +306,6 @@
     }
     .ir-key { font-size: 12px; color: #3d6a90; }
     .ir-val  { font-size: 13px; font-weight: 500; color: #b0cce0; }
-
-    .toggle-row-big {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-top: 14px;
-      padding: 12px 14px;
-      background: rgba(255,255,255,.03);
-      border: .5px solid rgba(255,255,255,.06);
-      border-radius: 14px;
-    }
-    .tg-label { font-size: 13px; font-weight: 500; color: #b0cce0; }
-    .tg {
-      width: 44px; height: 24px;
-      border-radius: 12px;
-      cursor: pointer;
-      position: relative;
-      transition: background .2s;
-      border: none; outline: none;
-      flex-shrink: 0;
-    }
-    .tg.on  { background: #4ade80; }
-    .tg.off { background: rgba(255,255,255,.15); }
-    .tg-knob {
-      position: absolute;
-      width: 18px; height: 18px;
-      border-radius: 50%;
-      background: white;
-      top: 3px;
-      transition: left .2s;
-    }
-    .tg.on  .tg-knob { left: 23px; }
-    .tg.off .tg-knob { left: 3px; }
 
     /* Settings */
     .settings-screen { padding: 16px; }
@@ -414,8 +385,8 @@
           <button class="edit-btn" onclick="this.textContent='Saved ✓'; setTimeout(()=>this.textContent='Edit',1500)">Edit</button>
         </div>
         <div class="stats-row">
-          <div class="stat-pill"><div class="stat-val">5</div><div class="stat-lbl">Devices</div></div>
-          <div class="stat-pill"><div class="stat-val" style="color:#4ade80">4</div><div class="stat-lbl">Active</div></div>
+          <div class="stat-pill"><div class="stat-val">4</div><div class="stat-lbl">Devices</div></div>
+          <div class="stat-pill"><div class="stat-val" style="color:#4ade80">3</div><div class="stat-lbl">Active</div></div>
           <div class="stat-pill"><div class="stat-val" style="color:#fbbf24">1</div><div class="stat-lbl">Alert</div></div>
         </div>
       </div>
@@ -433,10 +404,6 @@
           <div class="tile-name">Water Tank</div>
           <div class="tile-status"><span class="sdot" style="background:#38bdf8"></span><span style="color:#38bdf8">72% Full</span></div>
         </div>
-        <div class="dev-tile" onclick="openDevice('geyser')">
-          <div class="tile-accent a-amber"></div>
-          <div class="tile-icon">🔥</div>
-        </div>
         <div class="dev-tile" onclick="openDevice('elec')">
           <div class="tile-accent a-yellow"></div>
           <div class="tile-icon">⚡</div>
@@ -449,14 +416,11 @@
           <div class="tile-name">Air Quality</div>
           <div class="tile-status"><span class="sdot" style="background:#4ade80"></span><span style="color:#4ade80">Good · 42</span></div>
         </div>
-        <div class="dev-tile" style="grid-column:1/-1;flex-direction:row;align-items:center;gap:12px;min-height:auto" onclick="openDevice('fire')">
+        <div class="dev-tile" onclick="openDevice('fire')">
           <div class="tile-accent a-red"></div>
-          <div class="tile-icon" style="margin-bottom:0">🚨</div>
-          <div>
-            <div class="tile-name">Fire Alarm</div>
-            <div class="tile-status"><span class="sdot" style="background:#4ade80"></span><span style="color:#4ade80">Safe · No smoke</span></div>
-          </div>
-          <div style="margin-left:auto;font-size:11px;color:#2e4f6a">Tap for details →</div>
+          <div class="tile-icon">🚨</div>
+          <div class="tile-name">Fire Alarm</div>
+          <div class="tile-status"><span class="sdot" style="background:#4ade80"></span><span style="color:#4ade80">Safe</span></div>
         </div>
       </div>
 
@@ -480,9 +444,6 @@
         <div style="flex:1"><div class="tile-name">Water Tank</div><div class="tile-status"><span class="sdot" style="background:#38bdf8"></span><span style="color:#38bdf8">72% Full</span></div></div>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2e4f6a" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
       </div>
-      <div class="dev-tile" style="flex-direction:row;align-items:center;gap:14px;min-height:auto;padding:14px 16px" onclick="openDevice('geyser')">
-        <div class="tile-accent a-amber"></div>
-        <div style="font-size:22px">🔥</div>
       <div class="dev-tile" style="flex-direction:row;align-items:center;gap:14px;min-height:auto;padding:14px 16px" onclick="openDevice('elec')">
         <div class="tile-accent a-yellow"></div>
         <div style="font-size:22px">⚡</div>
@@ -535,7 +496,7 @@
       <div class="set-group">
         <div class="set-group-title">Security</div>
         <div class="set-item"><span class="set-ico">🔒</span><div class="set-text"><div class="set-name">App lock</div><div class="set-desc">Biometric enabled</div></div><span class="set-arrow">›</span></div>
-        <div class="set-item"><span class="set-ico">📱</span><div class="set-text"><div class="set-name">Connected devices</div><div class="set-desc">5 devices paired</div></div><span class="set-arrow">›</span></div>
+        <div class="set-item"><span class="set-ico">📱</span><div class="set-text"><div class="set-name">Connected devices</div><div class="set-desc">4 devices paired</div></div><span class="set-arrow">›</span></div>
       </div>
     </div>
   </div><!-- /settings screen -->
@@ -565,7 +526,6 @@
 </div><!-- /app -->
 
 <script>
-  let geyserOn = true;
   let prevScreen = 'home';
 
   function showScreen(id, navId) {
@@ -624,7 +584,6 @@
             <div class="info-row"><span class="ir-key">Main breaker</span><span class="ir-val" style="color:#4ade80">Normal</span></div>
           </div>
         </div>`;
-
     } else if (type === 'air') {
       title.textContent = 'Air Quality';
       detail.innerHTML = `
@@ -645,7 +604,6 @@
             <div class="info-row"><span class="ir-key">Sensor</span><span class="ir-val" style="color:#4ade80">Active</span></div>
           </div>
         </div>`;
-
     } else if (type === 'fire') {
       title.textContent = 'Fire Alarm';
       detail.innerHTML = `
@@ -667,25 +625,6 @@
 
     showScreen('screen-detail', null);
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  }
-
-  function toggleGeyser() {
-    geyserOn = !geyserOn;
-    const tg = document.getElementById('geyser-tg');
-    const gv = document.getElementById('g-val');
-    const gt = document.getElementById('g-temp');
-    if (tg) tg.className = 'tg ' + (geyserOn ? 'on' : 'off');
-    if (gv) gv.textContent = geyserOn ? 'ON' : 'OFF';
-    if (gt) gt.textContent = geyserOn ? '65°C' : '—';
-
-    const html = geyserOn
-      ? '<span class="sdot" style="background:#fb923c"></span><span style="color:#fb923c">ON · 65°C</span>'
-      : '<span class="sdot" style="background:#3d6a90"></span><span style="color:#3d6a90">OFF</span>';
-
-    const homeS = document.getElementById('home-geyser-status');
-    const listS = document.getElementById('list-geyser-status');
-    if (homeS) homeS.innerHTML = html;
-    if (listS) listS.innerHTML = html;
   }
 </script>
 </body>
