@@ -605,30 +605,6 @@
             <div class="info-row"><span class="ir-key">Est. empty in</span><span class="ir-val">~14 hrs</span></div>
           </div>
         </div>`;
-
-    } else if (type === 'geyser') {
-      title.textContent = 'Geyser';
-      const onOff = geyserOn ? 'on' : 'off';
-      const txt   = geyserOn ? 'ON' : 'OFF';
-      const temp  = geyserOn ? '65°C' : '—';
-      detail.innerHTML = `
-        <div class="dev-detail-card">
-          <div class="detail-icon-wrap di-amber">🔥</div>
-          <div class="detail-label">Status</div>
-          <div class="detail-val" id="g-val">${txt}</div>
-          <div class="detail-sub"><span class="sdot" style="background:#fb923c"></span><span style="color:#fb923c" id="g-temp">${temp}</span></div>
-          <div class="toggle-row-big">
-            <span class="tg-label">Power</span>
-            <button class="tg ${onOff}" id="geyser-tg" onclick="toggleGeyser()"><div class="tg-knob"></div></button>
-          </div>
-          <div class="info-rows">
-            <div class="info-row"><span class="ir-key">Set temperature</span><span class="ir-val">65°C</span></div>
-            <div class="info-row"><span class="ir-key">Mode</span><span class="ir-val">Eco</span></div>
-            <div class="info-row"><span class="ir-key">Power draw</span><span class="ir-val">2.0 kW</span></div>
-            <div class="info-row"><span class="ir-key">Last used</span><span class="ir-val">Today, 7:30 AM</span></div>
-          </div>
-        </div>`;
-
     } else if (type === 'elec') {
       title.textContent = 'Electricity';
       detail.innerHTML = `
